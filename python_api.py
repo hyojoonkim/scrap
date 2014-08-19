@@ -1,8 +1,16 @@
+#################################################
+# Copyright 2014 Hyojoon Kim
+# All Rights Reserved 
+# 
+# email: deepwater82@gmail.com
+#################################################
+
 import sys
 import os
 import pickle
 import re
 import operator
+import datetime
 
 def check_directory_and_add_slash(path):
   return_path = path
@@ -38,3 +46,9 @@ def sort_by_value(the_map):
 
     
 
+def checkTimeFormatReturn(time_str, form):
+    try:
+        parse_ts = datetime.datetime.strptime(time_str,form)
+        return parse_ts
+    except ValueError:
+        return None

@@ -1,3 +1,10 @@
+#################################################
+# Copyright 2014 Hyojoon Kim
+# All Rights Reserved 
+# 
+# email: deepwater82@gmail.com
+#################################################
+
 import os
 import sys
 import datetime
@@ -10,9 +17,7 @@ import python_api
 def scrap_gt():
 
     resultMapList = []
-
-
-    baseUrl = 'https://support.cc.gatech.edu/alerts'
+    baseUrl= 'https://support.cc.gatech.edu/alerts?order=field_alert_start&sort=desc'
     resultMapListOnePage = scrap_page(baseUrl)
 
     if len(resultMapListOnePage) !=0 :
@@ -21,14 +26,14 @@ def scrap_gt():
     # Next page. page=1 is the second page, which is strange. Whatever.
     page = 1
     while 1:
-        resultMapListOnePage = scrap_page(baseUrl + '?page='+str(page))
+        resultMapListOnePage = scrap_page(baseUrl + '&page='+str(page))
 
         if len(resultMapListOnePage) !=0 :
             resultMapList.extend(resultMapListOnePage)
             page = page + 1
 
         else: 
-            print 'Likely ended. Abort.'
+            print 'Likely ended. # of pages=',page,'. Abort.'
             break
 
 

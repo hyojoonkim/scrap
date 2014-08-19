@@ -5,7 +5,7 @@ import json
 import logging
 import urllib2
 from bs4 import BeautifulSoup
-
+import python_api
 
 def scrap_gt():
 
@@ -33,7 +33,9 @@ def scrap_gt():
 
 
     print len(resultMapList)
-    save_data_as_pickle(resultMapList, 'resultMapList', './')
+    sys.setrecursionlimit(10000)
+    python_api.save_data_as_pickle(resultMapList, 'resultMapList', './')
+
 
     return
 

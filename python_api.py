@@ -4,12 +4,6 @@ import pickle
 import re
 import operator
 
-THIS_TIMEZONE = 'US/Eastern'
-SW_DPID = "00:01:d0:7e:28:cf:5c:f5"     # DPID of switch being tested
-CONTROLLER_IP = "15.25.117.134"             # Controller IP
-NUM_FLOW_LIST = [400]      # Number of flows to test. By default, it will test 500 flows, one time.
-
-
 def check_directory_and_add_slash(path):
   return_path = path
 

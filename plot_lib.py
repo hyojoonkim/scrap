@@ -22,9 +22,9 @@ from collections import namedtuple
 from datetime import datetime
 import tarfile
 import matplotlib as mpl
-#mpl.use('PS')
+mpl.use('PS')
 #mpl.use('pdf')
-mpl.use('AGG')
+#mpl.use('AGG')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from numpy.random import normal

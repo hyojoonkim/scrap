@@ -13,6 +13,99 @@ import logging
 import urllib2
 from bs4 import BeautifulSoup
 import python_api
+import datetime
+
+
+def find_dates(content, resultMap):
+    start_date = ''
+    end_date = ''
+
+    month_union = '(January|February|March|April|May|June|July|August|September|October|November|December)'
+    days
+    m = re.findall(month_union + ' (\d+), (\d\d\d\d)', content)
+    if len(m) == 0:
+        print 'Failed to find dates:', resultMap['url']
+        
+    elif len(m) == 1:
+        start_s = m[0][0] + ' ' + m[0][1] + ', ' + m[0][2]
+        sdate = datetime.datetime.strptime(start_s, '%b %d, %y')
+        start_date = date.strftime('%y-%m-%d ',sdate)
+       
+    elif len(m) == 2:
+        start_s = m[0][0] + ' ' + m[0][1] + ', ' + m[0][2]
+        end_s = m[1][0] + ' ' + m[1][1] + ', ' + m[1][2]
+        sdate = datetime.datetime.strptime(start_s, '%b %d, %y')
+        edate = datetime.datetime.strptime(end_s, '%b %d, %y')
+        start_date = date.strftime('%y-%m-%d ',sdate)
+        end_date = date.strftime('%Y-%m-%d ', edate)
+
+    # time
+    m2 = re.findall('(\d+):(\d\d) (PM|AM)*', s)
+    if len(m2)==0:
+        print 'No time'
+        if start_date!='':
+            start_date = start_date + '01:00'
+        if end_date!='':
+            end_date = end_date + '23:00'
+
+    elif len(m2) ==1:
+        time == ''
+        if m2[0][2] == 'PM':
+            time = str(int(m2[0][0] + 12) + ':' + m2[0][1]
+        else:
+            if len(m2[0][0])==1:
+                time = '0'
+            time = time + m2[0][0] + ':' m2[0][1]
+
+        if start_date!='':
+            start_date = start_date + time
+        
+    elif len(m2) == 2:
+        stime == ''
+        if m2[0][2] == 'PM':
+            stime = str(int(m2[0][0] + 12) + ':' + m2[0][1]
+        else:
+            if len(m2[0][0])==1:
+                stime = '0'
+            stime = stime + m2[0][0] + ':' m2[0][1]
+
+        if start_date!='':
+            start_date = start_date + stime
+ 
+        etime == ''
+        if m2[1][2] == 'PM':
+            etime = str(int(m2[1][0] + 12) + ':' + m2[1][1]
+        else:
+            if len(m2[1][0])==1:
+                etime = '0'
+            etime = etime + m2[1][0] + ':' m2[1][1]
+
+        if start_date!='':
+            end_date = end_date + etime
+
+    print content
+    print start_ate
+    print end_date
+    sys.exit()
+
+def deal_with_bogus_entry(nextT, resultMap):
+    print resultMap
+    result = urllib2.urlopen('https://support.cc.gatech.edu'+resultMap['url'])
+    html = result.read();
+    soup = BeautifulSoup(html)
+#    tbody = soup.find_all('tbody')
+
+#    if len(tbody)!=1:
+#        print "Cannot find tbody. Skip"
+#        sys.exit()
+
+#    else:
+#    tb = tbody[0]
+    desc = soup.find('div', {'class':'field-item even'})
+    start_date, end_date = find_dates(desc.contents[0], resultMap)
+
+    sys.exit()
+    return
 
 def scrap_gt():
 
@@ -71,8 +164,11 @@ def scrap_page(url):
         ## Title
         nextT = t.findNext('td',{'class':'views-field views-field-title'})
         if nextT:
-            title = nextT.find('a', href=True).contents[0]
-            resultMap['title'] = title
+            t = nextT.find('a', href=True)
+            title = t.contents[0]
+            url = t['href']
+            resultMap['title'] = title.encode("ascii")
+            resultMap['url'] = url.encode("ascii")
         else:
             print 'No title'
         
@@ -92,6 +188,10 @@ def scrap_page(url):
             if nextT:
                 startTime= nextT.contents[0].replace('\n','').encode("ascii").lstrip(' ').rstrip(' ')
                 resultMap['startTime'] = startTime
+                # Bogus entry
+                if startTime.startswith('2012-03-29 14:'):
+                    deal_with_bogus_entry(nextT,resultMap)
+
             else:
                 print 'No start date'
         else:
@@ -109,7 +209,6 @@ def scrap_page(url):
                 print 'No end date'
         else:
             print 'No end date'
-        resultMap
 
         resultMapList.append(resultMap)
 

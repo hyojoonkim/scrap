@@ -14,33 +14,33 @@ import urllib2
 from bs4 import BeautifulSoup
 import python_api
 import datetime
-
+import re
 
 def find_dates(content, resultMap):
     start_date = ''
     end_date = ''
 
     month_union = '(January|February|March|April|May|June|July|August|September|October|November|December)'
-    days
     m = re.findall(month_union + ' (\d+), (\d\d\d\d)', content)
     if len(m) == 0:
         print 'Failed to find dates:', resultMap['url']
         
     elif len(m) == 1:
         start_s = m[0][0] + ' ' + m[0][1] + ', ' + m[0][2]
-        sdate = datetime.datetime.strptime(start_s, '%b %d, %y')
-        start_date = date.strftime('%y-%m-%d ',sdate)
+        sdate = datetime.datetime.strptime(start_s, '%B %d, %Y')
+        start_date = sdate.strftime('%Y-%m-%d ')
+        end_date = sdate.strftime('%Y-%m-%d ')
        
     elif len(m) == 2:
         start_s = m[0][0] + ' ' + m[0][1] + ', ' + m[0][2]
         end_s = m[1][0] + ' ' + m[1][1] + ', ' + m[1][2]
-        sdate = datetime.datetime.strptime(start_s, '%b %d, %y')
-        edate = datetime.datetime.strptime(end_s, '%b %d, %y')
-        start_date = date.strftime('%y-%m-%d ',sdate)
-        end_date = date.strftime('%Y-%m-%d ', edate)
+        sdate = datetime.datetime.strptime(start_s, '%B %d, %Y')
+        edate = datetime.datetime.strptime(end_s, '%B %d, %Y')
+        start_date = sdate.strftime('%Y-%m-%d ')
+        end_date = edate.strftime('%Y-%m-%d ')
 
     # time
-    m2 = re.findall('(\d+):(\d\d) (PM|AM)*', s)
+    m2 = re.findall('(\d+):(\d\d) (PM|AM)*', content)
     if len(m2)==0:
         print 'No time'
         if start_date!='':
@@ -49,62 +49,60 @@ def find_dates(content, resultMap):
             end_date = end_date + '23:00'
 
     elif len(m2) ==1:
-        time == ''
-        if m2[0][2] == 'PM':
-            time = str(int(m2[0][0] + 12) + ':' + m2[0][1]
+        time = ''
+        if m2[0][2] == 'PM' and m2[0][0]!='12':
+            time = str(int(m2[0][0]) + 12) + ':' + m2[0][1]
         else:
             if len(m2[0][0])==1:
                 time = '0'
-            time = time + m2[0][0] + ':' m2[0][1]
+            time = time + m2[0][0] + ':' + m2[0][1]
 
         if start_date!='':
             start_date = start_date + time
+        if end_date!='':
+            end_date = end_date + '23:00'
         
-    elif len(m2) == 2:
-        stime == ''
-        if m2[0][2] == 'PM':
-            stime = str(int(m2[0][0] + 12) + ':' + m2[0][1]
+    elif len(m2) >=2 :
+        stime = ''
+        if m2[0][2] == 'PM' and m2[0][0]!='12':
+            stime = str(int(m2[0][0]) + 12) + ':' + m2[0][1]
         else:
             if len(m2[0][0])==1:
                 stime = '0'
-            stime = stime + m2[0][0] + ':' m2[0][1]
+            stime = stime + m2[0][0] + ':' +  m2[0][1]
 
         if start_date!='':
             start_date = start_date + stime
  
-        etime == ''
-        if m2[1][2] == 'PM':
-            etime = str(int(m2[1][0] + 12) + ':' + m2[1][1]
+        etime = ''
+        if m2[-1][2] == 'PM' and m2[-1][0]!='12':
+            etime = str(int(m2[-1][0]) + 12) + ':' + m2[-1][1]
         else:
-            if len(m2[1][0])==1:
+            if len(m2[-1][0])==1:
                 etime = '0'
-            etime = etime + m2[1][0] + ':' m2[1][1]
+            etime = etime + m2[-1][0] + ':' + m2[-1][1]
 
-        if start_date!='':
+        if end_date!='':
             end_date = end_date + etime
 
     print content
-    print start_ate
+    print start_date
     print end_date
-    sys.exit()
+    return start_date, end_date
 
 def deal_with_bogus_entry(nextT, resultMap):
     print resultMap
     result = urllib2.urlopen('https://support.cc.gatech.edu'+resultMap['url'])
     html = result.read();
     soup = BeautifulSoup(html)
-#    tbody = soup.find_all('tbody')
-
-#    if len(tbody)!=1:
-#        print "Cannot find tbody. Skip"
-#        sys.exit()
-
-#    else:
-#    tb = tbody[0]
     desc = soup.find('div', {'class':'field-item even'})
-    start_date, end_date = find_dates(desc.contents[0], resultMap)
+    
+    start_date, end_date = find_dates(str(desc.contents[0]), resultMap)
 
-    sys.exit()
+    if start_date!='' and end_date!='':
+        resultMap['startTime'] = start_date
+        resultMap['endTime'] = end_date
+
     return
 
 def scrap_gt():
@@ -189,8 +187,8 @@ def scrap_page(url):
                 startTime= nextT.contents[0].replace('\n','').encode("ascii").lstrip(' ').rstrip(' ')
                 resultMap['startTime'] = startTime
                 # Bogus entry
-                if startTime.startswith('2012-03-29 14:'):
-                    deal_with_bogus_entry(nextT,resultMap)
+#                if startTime.startswith('2012-03-29 14:'):
+#                    deal_with_bogus_entry(nextT,resultMap)
 
             else:
                 print 'No start date'
@@ -205,6 +203,10 @@ def scrap_page(url):
             if nextT:
                 endTime= nextT.contents[0].replace('\n','').encode("ascii").lstrip(' ').rstrip(' ')
                 resultMap['endTime'] = endTime
+                # Bogus entry
+                if endTime.startswith('2012-03-29 14:'):
+                    deal_with_bogus_entry(nextT,resultMap)
+
             else:
                 print 'No end date'
         else:
